@@ -24,7 +24,7 @@ const upload = multer({
 // {
 //     throw new Error('from my middleware')
 // }
-app.post('/upload',auth,upload.single('upload'), (req, res) => {
+app.post('/upload',auth,upload.single('upload'),async (req, res) => {
  req.user.avatar=req.file.buffer
  await req.user.save()
     res.send()
