@@ -22,7 +22,7 @@ sendgrid.send(
         to:email,
         from:"ashwinurewar123@gmail.com",
         subject:'welcome to task manager',
-        text:" hi ${name}, thanks for choosing us"
+        text:`hi ${name}, thanks for choosing us`//USE `` NOT''OR ""
     }
 )  .then(() => {
     console.log('Email sent')
@@ -33,4 +33,23 @@ sendgrid.send(
 
 }
 
-module.exports=send_welcome
+const send_goodbye=(email,name)=>
+{
+
+sendgrid.send(
+    {
+        to:email,
+        from:"ashwinurewar123@gmail.com",
+        subject:'see u again',
+        text:`hi ${name}, thanks for taking our service`
+    }
+)  .then(() => {
+    console.log('Email sent')
+  })
+  .catch((error) => {
+    console.error(error)
+  })
+
+}
+
+module.exports={send_welcome,send_goodbye}

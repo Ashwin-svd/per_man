@@ -49,16 +49,18 @@ const userschema=new mongoose.Schema( {
     }],
     avatar:{type:Buffer}
 
-},{timestamps:true})
-userschema.virtual('tasks',{
-    ref:'Task',
-    localField:'_id',
-    foreignField:'owner'
+},
+{timestamps:true})
+
+
+userschema.virtual('tasks',{//setup virtual property sets relationship betn two entities
+    ref:'Task',//for popuate comand
+    localField:'_id',//id of user
+    foreignField:'owner'//
 })
 userschema.methods.getPublicProfile=function()//we are using this keyword hence we dont want to use arrow function
 { const user =this
     const userObject =user.toObject()
-
 
     delete userObject.password
     delete userObject.tokens
@@ -66,7 +68,7 @@ userschema.methods.getPublicProfile=function()//we are using this keyword hence 
 }
 userschema.methods.generateAuthToken=async function(){//.method for instance of model
     const user=this
-    const token=jwt.sign({_id:user._id.toString()},'asdfghjkl')
+    const token=jwt.sign({_id:user._id.toString()},process.env.JWT_SECRET)
     user.tokens=user.tokens.concat({token})
     await user.save()
     return token
@@ -74,7 +76,8 @@ userschema.methods.generateAuthToken=async function(){//.method for instance of 
 //const data=jwt.verify(token,'asdfghjkl')
 //console.log(data)
 }
-userschema.statics.findByCred=async(email,password)=>{//.statics for  model
+userschema.statics.findByCred=async(email,password)=>{
+    //.statics for  model
     const user=await User.findOne({email})
     if(!user)
     {
@@ -89,6 +92,15 @@ userschema.statics.findByCred=async(email,password)=>{//.statics for  model
     return user
 }
 
+userschema.statics.findByEmail=async(email)=>{
+    //.statics for  model
+    const user=await User.findOne({email})
+    if(user)
+    {
+        throw new Error('email already exist')
+    }
+
+}
 //FUNCTION FOR PASSWORD HASHING
 //ARROW FUNCTION DONT BIND
 userschema.pre('save',async function (next){
@@ -100,13 +112,16 @@ if(user.isModified('password'))// telis whre parameter changed or added
 next()
 })
 
-userschema.pre('remove',async function (next){
-    const user=this//this= individual user that about to save
-    // console.log('justbefore saving')
+userschema.methods.deletealltasks=async function(){
+   const user=this
     await Task.deleteMany({owner:user._id})
-    next()
-    })
 
+    }
+userschema.pre('remove', async function (next) {
+    const user = this
+    await Task.deleteMany({ owner: user._id })
+    next()
+})
 const User = mongoose.model('User', userschema)
 
 // var me = new User({

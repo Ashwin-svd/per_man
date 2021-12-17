@@ -9,9 +9,9 @@ completed: {
     default: false
 },
 owner: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,//object id
     required: true,
-    ref: 'User'
+    ref: 'User'//mandtry to run populatecommand
 }
 },{timestamps:true})
 const Task = mongoose.model('Task', taskschema)
