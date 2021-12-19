@@ -1,8 +1,9 @@
-const mongoose = require('mongoose')
+
 const validator = require('validator')
 const Task=require('./task_model')
 const bcrypt=require('bcryptjs')
-mongoose.connect('mongodb://127.0.0.1:27017/task-manager')
+require('../db/mongoose')
+const mongoose= require('mongoose')
 const jwt=require('jsonwebtoken')
 const userschema=new mongoose.Schema( {
     name: {
