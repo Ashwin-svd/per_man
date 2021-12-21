@@ -3,6 +3,7 @@ const User=require('../models/user_model')
 const auth=async(req,res,next)=>{
   //  console.log('middlware')
    // res.status(503).send('under maintainance')
+  
 try{
     //console.log(req)
     const token =req.header('Authorization').replace('Bearer ','')

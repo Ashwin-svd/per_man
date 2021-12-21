@@ -2,13 +2,22 @@ const express = require('express')
 const Task = require('../models/task_model')
 const auth = require('../middleware/auth_ex_mdlwr')
 const router = new express.Router()
-//const app = express()
-//const port = 3000
-//app.use(userRouter)
-//app.use(express.json())
+
+const multer= require('multer')
+    const upload = multer({
+        limits:{fileSize:100000},//restriction
+        fileFilter(req,file,cb){
+            if(!file.originalname.match(/\.(jpg|jpeg|xlsx|csv|pdf|doc|docs|png )$/))//we can usefile.originalname.match(/\.(jpg|jpeg|png )$/)
+          {return cb(new Error('must be jpg|jpeg|xlsx|csv|pdf|doc|docs|png'))}
+          cb(undefined,true)
+        }
+         
+    })
+
 router.post('/tasks', auth, async (req, res) => {
     const task = new Task({
         ...req.body,//...=es6 spread operator
+        
         owner: req.user._id
     })
 
@@ -90,6 +99,7 @@ router.patch('/tasks/:id',auth, async (req, res) => {
         }
         updates.forEach((update) => task[update] = req.body[update])
         await task.save()
+
         res.send(task)
     } catch (e) {
         console.log(e)
@@ -100,8 +110,7 @@ router.patch('/tasks/:id',auth, async (req, res) => {
 router.delete('/tasks/:id', auth,async (req, res) => {
     try {
         //const task = await Task.findByIdAndDelete(req.params._id)
-       // console.log("a==",req.params.id)
-        //console.log("b==",req.user._id)
+     
         const task = await Task.findOneAndDelete({_id:req.params.id,owner:req.user._id})
         //console.log(task)
         if (!task) {
@@ -113,6 +122,64 @@ router.delete('/tasks/:id', auth,async (req, res) => {
         //console.log(e)
         res.status(500).send()
     }
+})
+
+router.post('/tasks/upload_doc/:id',auth,upload.single('upload'),async (req, res) =>
+{ const _id = req.params.id
+
+try {
+    const task = await Task.findById({_id,owner:req.user._id})//with this we can access
+    if (!task) {
+        return res.status(404).send()
+    }
+  
+   task.job_files=task.job_files.concat({job_file:req.file.buffer})
+    console.log(task.job_files)
+    await task.save()
+    res.send(task)
+} catch (e) {
+    res.status(500).send()
+}
+},(error,req,res,next)=>{//handeles error frommiddleware 
+        res.status(400).send({error:error.message})
+    })
+
+//  router.delete(' /delete_doc/:id/:docid',auth,async(req,res)=>
+//  {try {
+//     const task = await Task.findById({_id:req.params.id,owner:req.user._id})//with this we can access
+//     if (!task) {
+//         return res.status(404).send()
+//     }
+     
+//      await task.save()
+//      res.send()
+//  })
+// router.patch('/users/update_pic',auth,upload.single('upload'),async (req,res)=>
+// {
+//     req.user.avatar=undefined
+//     req.user.avatar=req.file.buffer
+//     await req.user.save()
+//     res.send()
+//     console.log("updated")
+// },(error,req,res,next)=>{//handeles error frommiddleware 
+//     res.status(400).send({error:error.message})
+// })
+
+
+router.get('/tasks/get_upload_doc/:id',async(req,res)=>{
+    
+try{const task= await Task.findById(req.params.id)
+   
+if(!task||!task.job_files)
+{
+    throw new Error("bla bla")
+}
+//res.set('Content-Type','image/jpg')
+//console.log( task.job_files.find(item => item.id === '61c1c5a519d2d47476fc71dc'))
+res.send(task.job_files)
+}
+catch(e){
+    res.status(404).send("no doc found ")}
 })
 
  module.exports = router

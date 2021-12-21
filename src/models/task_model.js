@@ -9,6 +9,7 @@ completed: {
     type: Boolean,
     default: false
 },
+job_files:[{job_file:{type:Buffer}}],
 owner: {
     type: mongoose.Schema.Types.ObjectId,//object id
     required: true,

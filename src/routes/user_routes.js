@@ -48,7 +48,6 @@ router.post('/users/signup',async(req,res)=>{
          res.status(400).send(e)
      })
 }
-
 )
 
 router.post('/users/login',async(req,res)=>{
@@ -65,7 +64,7 @@ router.post('/users/login',async(req,res)=>{
         res.status(400).send("credentials are incorrect")
     }
 })
-router.get('/users',async(req,res)=>{//first it will going to run auth then it willhandel routs
+router.get('/users/get_all',async(req,res)=>{//first it will going to run auth then it willhandel routs
     try{
         const users=await User.find({})
         res.send(users)
@@ -105,7 +104,7 @@ router.get('/users/me',auth,async(req,res)=>{//first it will going to run auth t
     }
 })
 
-router.patch('/users/me',auth,async (req,res)=>{
+router.patch('/users/update_profile',auth,async (req,res)=>{
     //for convertting object toan arrayofits properties
         const updates=Object.keys(req.body)
         const allw_updt=['name','age','password']
@@ -127,7 +126,7 @@ router.patch('/users/me',auth,async (req,res)=>{
     }
     })
     
-router.delete('/users/me',auth,async (req,res)=>{
+router.delete('/users/delete_all_plans',auth,async (req,res)=>{
         try{
             const user=await User.findById(req.user._id)
           //  console.log(user)
@@ -155,7 +154,7 @@ router.delete('/users/me',auth,async (req,res)=>{
 
 //IMP=const base64Img = Buffer.from(user.avatar).toString('base64')
     
-router.post('/upload',auth,upload.single('upload'),async (req, res) => {
+router.post('/users/upload',auth,upload.single('upload'),async (req, res) => {
     req.user.avatar=req.file.buffer
     await req.user.save()
         res.send()
@@ -181,7 +180,7 @@ router.patch('/users/update_pic',auth,upload.single('upload'),async (req,res)=>
 })
 
 
-router.get('/users/:id/avatar',async(req,res)=>{
+router.get('/users/:id/pic',async(req,res)=>{
     console.log(req.params.id)
 try{const user= await User.findById(req.params.id)
     console.log(req.params.id)
@@ -198,7 +197,7 @@ catch(e){console.log(e)
     res.status(404).send()}
 })
 
-router.get('/users/avatar/pic',auth,async(req,res)=>{
+router.get('/users/my_pic',auth,async(req,res)=>{
     
 try{const user= await User.findById(req.user._id)
    
