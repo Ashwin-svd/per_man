@@ -38,15 +38,21 @@ router.post('/users/signup',async(req,res)=>{
     
     return res.status(400).send("email aready exist")
    }
+    try{
+    const  user = new User(req.body)
+     const token=await user.generateAuthToken()
+
     
-    const user = new User(req.body)
-    const token=await user.generateAuthToken()
  //console.log(JSON.stringify(req.body))
      user.save().then(() => {mail.send_welcome(req.body.email,req.body.name)
-         res.status(201).send(user.getPublicProfile())
+         res.status(201).send({user:user.getPublicProfile(),token})
      }).catch((e) => {
-         res.status(400).send(e)
-     })
+         
+        return  res.status(500).send("unknown error")
+     })}
+     catch(e){res.status(401).send("invalid credentials")
+         }
+
 }
 )
 
@@ -56,7 +62,7 @@ router.post('/users/login',async(req,res)=>{
     
         const token=await user.generateAuthToken()//for individual user////
         //console.log({user,token})
-        res.send ({user:user.getPublicProfile(),token})
+        res.status(200).send ({user:user.getPublicProfile(),token})
        
     }
     catch(e){ 
@@ -67,20 +73,20 @@ router.post('/users/login',async(req,res)=>{
 router.get('/users/get_all',async(req,res)=>{//first it will going to run auth then it willhandel routs
     try{
         const users=await User.find({})
-        res.send(users)
+        res.status(200).send(users)
     }
     catch(e){
-        res.status(500).send()
+        res.status(500).send("unknown error")
     }
 })
 router.post('/users/logout',auth,async(req,res)=>{//first it will going to run auth then it willhandel routs
     try{
         req.user.tokens=req.user.tokens.filter((token)=>{return token.token!==req.token})
         await req.user.save()
-        res.send(req.user)
+        res.status(200).send("logged out successfully")
     }
     catch(e){
-        res.status(500).send()
+        res.status(500).send("unknown error")
     }
 })
 
@@ -88,26 +94,26 @@ router.post('/users/logoutall',auth,async(req,res)=>{//first it will going to ru
     try{
         req.user.tokens=[]
         await req.user.save()
-        res.send(req.user)
+        res.status(200).send("logged out from all")
     }
     catch(e){
-        res.status(500).send()
+        res.status(500).send("unknown error")
     }
 })
 router.get('/users/me',auth,async(req,res)=>{//first it will going to run auth then it willhandel routs
     try{
         
-        res.send(req.user)
+        res.status(200).send(req.user)
     }
     catch(e){
-        res.status(500).send()
+        res.status(500).send("unknown error")
     }
 })
 
 router.patch('/users/update_profile',auth,async (req,res)=>{
     //for convertting object toan arrayofits properties
         const updates=Object.keys(req.body)
-        const allw_updt=['name','age','password']
+        const allw_updt=['name','age','password','email','phone_number']
         const isvalidoprn=updates.every((update)=>{return allw_updt.includes(update)})
         if(!isvalidoprn)
         {return res.status(400).send("error:Invalid updates")}
@@ -119,10 +125,10 @@ router.patch('/users/update_profile',auth,async (req,res)=>{
             await req.user.save()
      
             
-            res.send(req.user)
+            res.send("profile updated successfully")
         }
         catch(e){
-            res.status(400).send(e)
+            res.status(500).send("unknown error")
     }
     })
     
@@ -132,11 +138,11 @@ router.delete('/users/delete_all_plans',auth,async (req,res)=>{
           //  console.log(user)
           //OR
             await user.deletealltasks()
-          
-            res.send(req.user)
+          await user.save()
+            res.send("all plans deleted")
          }
         catch(e){
-            res.status(400).send(e)
+            res.status(500).send("unnown error")
         }
     })
     
@@ -155,28 +161,28 @@ router.delete('/users/delete_all_plans',auth,async (req,res)=>{
 //IMP=const base64Img = Buffer.from(user.avatar).toString('base64')
     
 router.post('/users/upload',auth,upload.single('upload'),async (req, res) => {
-    req.user.avatar=req.file.buffer
+    req.user.profile=req.file.buffer
     await req.user.save()
-        res.send()
+        res.send("uploaded successfully")
     },(error,req,res,next)=>{//handeles error frommiddleware 
-        res.status(400).send({error:error.message})
+        res.status(400).send("error from middleware")
     })
 
-router.delete('/users/me/avatar',auth,async(req,res)=>
+router.delete('/users/delete_profile_pic',auth,async(req,res)=>
 {
-    req.user.avatar=undefined//deleting picture
+    req.user.profile=undefined//deleting picture
     await req.user.save()
-    res.send()
+    res.send("profile pic deleted")
 })
 router.patch('/users/update_pic',auth,upload.single('upload'),async (req,res)=>
 {
-    req.user.avatar=undefined
-    req.user.avatar=req.file.buffer
+    req.user.profile=undefined
+    req.user.profile=req.file.buffer
     await req.user.save()
-    res.send()
-    console.log("updated")
+    res.send("updated sucess fully")
+  
 },(error,req,res,next)=>{//handeles error frommiddleware 
-    res.status(400).send({error:error.message})
+    res.status(500).send("unknown error")
 })
 
 
@@ -186,39 +192,39 @@ try{const user= await User.findById(req.params.id)
     console.log(req.params.id)
    // console.log(user)
   //  console.log(user.avatar)
-if(!user||!user.avatar)
+if(!user||!user.profile)
 {
     throw new Error("bla bla")
 }
 res.set('Content-Type','image/jpg')
-res.send(user.avatar)
+res.send(user.profile)
 }
-catch(e){console.log(e)
-    res.status(404).send()}
+catch(e){
+    res.status(404).send("not found")}
 })
 
 router.get('/users/my_pic',auth,async(req,res)=>{
     
 try{const user= await User.findById(req.user._id)
    
-if(!user||!user.avatar)
+if(!user||!user.profile)
 {
     throw new Error("bla bla")
 }
 res.set('Content-Type','image/jpg')
-res.send(user.avatar)
+res.send(user.profile)
 }
-catch(e){console.log(e)
-    res.status(404).send()}
+catch(e){
+    res.status(404).send("not found")}
 })
 
 router.delete('/users/deleteprofile', auth, async (req, res) => {
     try {
         await req.user.remove()
         mail.send_goodbye(req.user.email, req.user.name)
-        res.send(req.user)
+        res.send("delted")
     } catch (e) {
-        res.status(500).send()
+        res.status(500).send("unknown error")
     }
 })
     // const main=async()=>{

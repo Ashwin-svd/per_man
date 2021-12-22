@@ -11,6 +11,15 @@ const userschema=new mongoose.Schema( {
         required: true,
         trim: true 
     },
+    phone_number:{type:String,
+    required:true,
+    validate(value) {
+        if (!validator.isMobilePhone(value) )
+        {
+            throw new Error('phone number  isinvalid')
+        }
+    }
+    },
     email: {
         type: String,
         unique:true,
@@ -48,7 +57,7 @@ const userschema=new mongoose.Schema( {
         token:{type:String,
         required:true}
     }],
-    avatar:{type:Buffer}
+    profile:{type:Buffer}
 
 },
 {timestamps:true})

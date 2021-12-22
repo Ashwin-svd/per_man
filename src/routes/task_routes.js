@@ -14,7 +14,7 @@ const multer= require('multer')
          
     })
 
-router.post('/tasks', auth, async (req, res) => {
+router.post('/plans', auth, async (req, res) => {
     const task = new Task({
         ...req.body,//...=es6 spread operator
         
@@ -23,9 +23,9 @@ router.post('/tasks', auth, async (req, res) => {
 
     try {
         await task.save()
-        res.status(201).send(task)
+        res.status(200).send("success fully created ")
     } catch (e) {
-        res.status(400).send(e)
+        res.status(400).send("not saved")
     }
 })
 
@@ -35,7 +35,7 @@ router.post('/tasks', auth, async (req, res) => {
 ////PAGINATION= /tasks?sortedBy=createdAt :Asc
 //get tasks belongingto user
 //PAGINATION=/task givesdefault order
-router.get('/tasks',auth, async (req, res) => {
+router.get('/plans',auth, async (req, res) => {
     //give query=?completed=false/true or dont give any query.
     //eg=/tasks?completed=false 
     const match={}
@@ -60,30 +60,30 @@ router.get('/tasks',auth, async (req, res) => {
             }
         )
         //console.log(user.tasks)
-        res.send(req.user.tasks)
+        res.status(200).send(req.user.tasks)
     } catch (e) {
         console.log(e)
-        res.status(500).send()
+        res.status(500).send("unknown error")
     }
 })
 
-router.get('/tasks/:id',auth, async (req, res) => {
+router.get('/plans/:id',auth, async (req, res) => {
     const _id = req.params.id
 
     try {
         const task = await Task.findById({_id,owner:req.user._id})//with this we can access
 
         if (!task) {
-            return res.status(404).send()
+            return res.status(404).send("plan not found")
         }
 
-        res.send(task)
+        res.status(200).send(task)
     } catch (e) {
-        res.status(500).send()
+        res.status(500).send("unknown error")
     }
 })
 
-router.patch('/tasks/:id',auth, async (req, res) => {
+router.patch('/plans/:id',auth, async (req, res) => {
     const updates = Object.keys(req.body)
     const allowedUpdates = ['description', 'completed']
     const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
@@ -95,53 +95,53 @@ router.patch('/tasks/:id',auth, async (req, res) => {
     try {
         const task = await Task.findById({_id: req.params.id,owner:req.user._id})
         if (!task) {
-            return res.status(404).send()
+            return res.status(404).send("plan not found")
         }
         updates.forEach((update) => task[update] = req.body[update])
         await task.save()
 
-        res.send(task)
+        res.status(200).send("updated successfully")
     } catch (e) {
         console.log(e)
-        res.status(400).send(e)
+        res.status(500).send("unknown error")
     }
 })
 
-router.delete('/tasks/:id', auth,async (req, res) => {
+router.delete('/plans/:id', auth,async (req, res) => {
     try {
         //const task = await Task.findByIdAndDelete(req.params._id)
      
         const task = await Task.findOneAndDelete({_id:req.params.id,owner:req.user._id})
         //console.log(task)
         if (!task) {
-            res.status(404).send()
+            res.status(404).send("plan not found")
         }
 
-        res.send(task)
+        res.status(200).send("deleted successfully")
     } catch (e) {
         //console.log(e)
-        res.status(500).send()
+        res.status(500).send("unknown error")
     }
 })
 
-router.post('/tasks/upload_doc/:id',auth,upload.single('upload'),async (req, res) =>
+router.post('/plans/upload_doc/:id',auth,upload.single('upload'),async (req, res) =>
 { const _id = req.params.id
 
 try {
     const task = await Task.findById({_id,owner:req.user._id})//with this we can access
     if (!task) {
-        return res.status(404).send()
+        return res.status(404).send("plan not found")
     }
   
    task.job_files=task.job_files.concat({job_file:req.file.buffer})
     console.log(task.job_files)
     await task.save()
-    res.send(task)
+    res.status(200).send("successfully uploaded")
 } catch (e) {
-    res.status(500).send()
+    res.status(500).send("unknown error")
 }
 },(error,req,res,next)=>{//handeles error frommiddleware 
-        res.status(400).send({error:error.message})
+        res.status(400).send("error from middleware")
     })
 
 //  router.delete(' /delete_doc/:id/:docid',auth,async(req,res)=>
@@ -166,7 +166,7 @@ try {
 // })
 
 
-router.get('/tasks/get_upload_doc/:id',async(req,res)=>{
+router.get('/plans/get_upload_doc/:id',async(req,res)=>{
     
 try{const task= await Task.findById(req.params.id)
    
@@ -176,7 +176,7 @@ if(!task||!task.job_files)
 }
 //res.set('Content-Type','image/jpg')
 //console.log( task.job_files.find(item => item.id === '61c1c5a519d2d47476fc71dc'))
-res.send(task.job_files)
+res.status(200).send(task.job_files)
 }
 catch(e){
     res.status(404).send("no doc found ")}

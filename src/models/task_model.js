@@ -5,6 +5,18 @@ const taskschema=new mongoose.Schema({description: {
     required: true,
     trim: true
 },
+Date: {
+    type: Date
+    },
+
+schedule: {
+    hours: {
+        type: Number, required: true, min: 0, max: 23
+    },
+    minutes: {
+        type: Number, required: true, min: 0, max: 59
+    }
+},
 completed: {
     type: Boolean,
     default: false
