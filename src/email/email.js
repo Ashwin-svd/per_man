@@ -21,7 +21,7 @@ sendgrid.send(
     {
         to:email,
         from:"ashwinurewar123@gmail.com",
-        subject:'welcome to task manager',
+        subject:'welcome to per_man,start manging your tasks',
         text:`hi ${name}, thanks for choosing us`//USE `` NOT''OR ""
     }
 )  .then(() => {
